@@ -6,9 +6,12 @@
 **仿真/真机模型：** 只用该工作空间里的 `arm_description` + `arm_moveit_config`，不用课设 URDF，不另起 ROS 2 仿真  
 **语言约定：** 应用层 Python；调用 `moveit_commander`；不写 Commander 库、不改 `abb_driver`
 
-对照清单与命令改写见仓库根目录 [NOETIC_ADJUST.md](NOETIC_ADJUST.md)。
+对照清单见 [NOETIC_ADJUST.md](NOETIC_ADJUST.md)。  
+**启动臂、RViz / Python 下发运动（先做这一章）：** [START_ARM.md](START_ARM.md)
 
-下文每一步：**目的、原理、实现、验收**。未通过验收不得进入下一步。
+下文每一步：**目的、原理、实现、验收**。未通过验收不得进入下一步。顺序：
+
+**模块 S（启动 + 运动指令）→ A → B → C → D → E → F → G → H**
 
 ---
 
@@ -34,6 +37,48 @@ vs_fsm --SERVO--> vs_servo
 
 ---
 
+## 模块 S 启动本机机械臂并下发运动指令
+
+**本机版本：** Noetic + 最内层 `robot_gripper` + `arm_description` / `arm_moveit_config` / `abb_driver` / `control_robot`。完整点击步骤、失败表、三条启动路径见 [START_ARM.md](START_ARM.md)。这里是手册里必须先过的浓缩版。
+
+### 目的
+
+臂要先能按你的指令动。不会启动、不会在 RViz 里 Execute、不会用 `moveit_commander` 发 2 cm 位移，后面的视觉闭环没有执行层。
+
+### 原理
+
+运动指令只有一层客户端：RViz MotionPlanning 或 Python `MoveGroupCommander.go()`。它们都把目标交给已经启动的 MoveIt 1；`abb_driver` / `control_robot` 跟踪轨迹。`start.sh`、`start_ui.sh`、`launch_synarm_ui.sh` 负责把这条链拉起来，不要同时开两套。
+
+### 实现
+
+每个新终端先：
+
+```bash
+export WS=/home/biand/workspace_ws/src/robot_gripper_9_91/robot_gripper_5_29/robot_gripper
+source /opt/ros/noetic/setup.bash
+source "$WS/devel/setup.bash"
+cd "$WS"
+```
+
+1. `sed -n '1,80p' start.sh start_ui.sh launch_synarm_ui.sh` 和 `ls src/arm_moveit_config/launch`，判断走哪条路径（见 START_ARM 路径 1/2/3）。
+2. **只开一条 bringup。** 日常优先：`./start.sh`。只练 MoveIt、不上真机：`roslaunch arm_moveit_config demo.launch`。要实验室 UI：`./start_ui.sh` 或 `./launch_synarm_ui.sh`。
+3. 另开终端，确认 `rostopic echo /joint_states -n 1` 有数。
+4. RViz → MotionPlanning → 选本机规划组 → 末端只拖 2～3 cm → Plan → 速度 0.1 → Execute。
+5. 拷入并编译 `vs_practice` 后：
+
+```bash
+rosrun vs_practice send_small_motion.py _group:=manipulator _dz:=0.02 _dry_run:=true
+rosrun vs_practice send_small_motion.py _group:=manipulator _dz:=0.02 _dry_run:=false
+```
+
+`_group` 必须改成 `print_interface.py` 打印的组名。位移 > 4 cm 脚本会拒绝。
+
+### 验收
+
+`/joint_states` 在刷新；RViz Execute 后关节值变化；`send_small_motion.py` 打出 `go ok=True`（或 dry-run 打出合理目标）。不通过则只排启动与组名，不写检测器。
+
+---
+
 ## 步骤 A 环境确认与信息登记
 
 ### 目的
@@ -46,9 +91,9 @@ vs_fsm --SERVO--> vs_servo
 
 ### 实现
 
-1. 把本仓库 `vs_practice/` 拷进最内层 `src/`，在该层 `catkin build vs_practice`，`source devel/setup.bash`。不要对 `/home/biand/workspace_ws` 做 colcon / catkin。
-2. 用实验室 `start.sh` / `start_ui.sh` 启动臂和相机（以你们 `ROS_DOCUMENTATION.md` 为准）。
-3. 另开终端：
+1. 模块 S 已经通过（臂能 Execute，Python 能发 2 cm）。
+2. 把本仓库 `vs_practice/` 拷进最内层 `src/`（若 S.6 还没拷），在该层 `catkin build vs_practice`，`source devel/setup.bash`。不要对 `/home/biand/workspace_ws` 做 colcon / catkin。
+3. 臂保持模块 S 的启动方式，不要另开第二套 bringup。另开终端：
 
 ```bash
 source /opt/ros/noetic/setup.bash
@@ -58,11 +103,11 @@ rostopic echo /joint_states -n 1
 ```
 
 4. 打开 `src/arm_moveit_config` 的 SRDF 与 `controllers.yaml`，把打印结果写入 `vs_practice/config/interface.yaml`。
-5. 在 RViz MotionPlanning 拖一次末端并 Execute。
+5. 模块 S 里成功的那次末端位姿写入 `waypoints.yaml`（不要抄手册示例数字）。
 
 ### 验收
 
-清单填满；RViz 执行一次成功。没有 `controller_manager` 不算失败——ABB 经常没有，记到 yaml 即可。不通过则只排启动问题。
+清单填满。RViz / Python 运动在模块 S 已验收。没有 `controller_manager` 不算失败——ABB 经常没有，记到 yaml 即可。
 
 ---
 
@@ -188,6 +233,6 @@ ArUco 四角点取中心。眼在手相机固连末端。光学系与法兰系�
 
 ## 进度
 
-A → B → C → D → E（最低完成线）→ F → G（含金量）→ H
+**S 启动+运动指令** → A 清单 → B Commander 流程 → C 检测 → D 开环视觉 → E 速度/增量闭环 ★最低完成线 → F 对照 → G 延迟三律 → H 真机细则
 
-当前：工作空间与发行版已锁定；`vs_practice` 已写好待拷入。下一步是步骤 A：编译包、启动实验室臂、跑 `print_interface.py`。
+当前：栈已锁定为 Noetic 实验室包。下一步做 **模块 S**（[START_ARM.md](START_ARM.md)），不要先写检测。

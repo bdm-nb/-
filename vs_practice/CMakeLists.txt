@@ -17,6 +17,7 @@ catkin_package()
 
 catkin_install_python(PROGRAMS
   scripts/print_interface.py
+  scripts/send_small_motion.py
   scripts/vs_detect_node.py
   scripts/vs_servo_node.py
   scripts/vs_commander_node.py

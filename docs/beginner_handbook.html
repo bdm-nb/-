@@ -62,6 +62,41 @@
 <b>你现在的位置：</b>第一门课已看到第八章（Python 调用 Commander），第二门 ros2_control 课看得很少。因此本文默认：你会在 Python 里调用规划接口，但还没有自己写完整作业节点。第一步不是加相机，而是把调用做成可重复的脚本。
 </div>
 <p>应用层一律用 Python。调用 <span class="en">moveit_commander</span>，不要写 Commander 库，不要改 <span class="en">abb_driver</span>。仿真和真机都用最内层 <span class="en">robot_gripper</span> 里已有的臂包，不要另起 ROS 2 课设工作空间。</p>
+<p>动手顺序：先做<b>第零章（启动臂并下发运动）</b>，再做环境清单和视觉。仓库里单独成篇的是 <span class="en">START_ARM.md</span>。</p>
+
+<h2>第零章　启动本机机械臂并下发运动指令</h2>
+<div class="box">
+<b>本机版本：</b>WSL Ubuntu 20.04，ROS 1 Noetic，工作空间根目录
+<code>/home/biand/workspace_ws/src/robot_gripper_9_91/robot_gripper_5_29/robot_gripper</code>。
+臂包是 <span class="en">arm_description + arm_moveit_config</span>，真机走 <span class="en">abb_driver / control_robot</span>。启动脚本是该目录下的 <span class="en">start.sh、start_ui.sh、launch_synarm_ui.sh</span>。
+</div>
+<h3>0.1 目的</h3>
+<p>臂还不能按你的指令动，就不要写检测和伺服。这一章要你做到：在正确的目录 source、只开一条实验室 bringup、用 RViz 发出第一条轨迹、用 Python Commander 再发出 2 厘米位移。</p>
+<h3>0.2 原理</h3>
+<p>RViz 里点 Execute，和 Python 里 <span class="en">MoveGroupCommander.go()</span>，是同一层客户端。它们把目标交给已经启动的 MoveIt 1；<span class="en">bio_ik</span> 若写在 kinematics 里会自动参与；<span class="en">abb_driver</span> 跟踪关节轨迹。你不写驱动。</p>
+<h3>0.3 每个新终端先做</h3>
+<pre>export WS=/home/biand/workspace_ws/src/robot_gripper_9_91/robot_gripper_5_29/robot_gripper
+source /opt/ros/noetic/setup.bash
+source "$WS/devel/setup.bash"
+cd "$WS"</pre>
+<h3>0.4 启动（三条路径只开一条）</h3>
+<ol>
+  <li>先读脚本，不要猜：<code>sed -n '1,80p' start.sh start_ui.sh launch_synarm_ui.sh</code>，再 <code>ls src/arm_moveit_config/launch</code>。</li>
+  <li>只练 MoveIt、不上真机：<code>roslaunch arm_moveit_config demo.launch</code>（若无此文件，用上一步看到的 demo/fake/rviz launch）。</li>
+  <li>实验室日常：<code>./start.sh</code>。真机还要遵守 <span class="en">ROS_DOCUMENTATION.md</span> 和组里使能规程。</li>
+  <li>要实验室 UI：<code>./start_ui.sh</code> 或 <code>./launch_synarm_ui.sh</code>。不要和 <span class="en">start.sh</span> 同时开。</li>
+</ol>
+<h3>0.5 确认在听</h3>
+<pre>rostopic echo /joint_states -n 1
+rosrun vs_practice print_interface.py</pre>
+<p>把打印出的规划组名字记下来。后面所有 <code>_group:=</code> 用这个名字，不要写 panda_arm。</p>
+<h3>0.6 第一种运动指令：RViz</h3>
+<p>MotionPlanning 插件 → 选规划组 → 末端只拖 2～3 厘米 → Plan → 速度缩到 0.1 → Execute。再 echo 一次 <span class="en">/joint_states</span>，数字必须变。</p>
+<h3>0.7 第二种运动指令：Python</h3>
+<pre>rosrun vs_practice send_small_motion.py _group:=manipulator _dz:=0.02 _dry_run:=true
+rosrun vs_practice send_small_motion.py _group:=manipulator _dz:=0.02 _dry_run:=false</pre>
+<p>脚本用 <span class="en">moveit_commander</span> 做一次小位移，超过 4 厘米会拒绝。这就是“调用 Commander”。</p>
+<div class="ok">验收：关节状态在刷新；RViz Execute 成功；Python 打出 go ok=True。不通过只排启动，不写相机。</div>
 
 <h2>第一章　这个项目到底在做什么</h2>
 <h3>1.1 用生活例子先建立图像</h3>

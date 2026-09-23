@@ -1,0 +1,17 @@
+<launch>
+  <arg name="group" default="manipulator"/>
+  <arg name="dx" default="0.0"/>
+  <arg name="dy" default="0.0"/>
+  <arg name="dz" default="0.02"/>
+  <arg name="dry_run" default="true"/>
+  <arg name="vel_scale" default="0.1"/>
+
+  <node pkg="vs_practice" type="send_small_motion.py" name="vs_send_small_motion" output="screen">
+    <param name="group" value="$(arg group)"/>
+    <param name="dx" value="$(arg dx)"/>
+    <param name="dy" value="$(arg dy)"/>
+    <param name="dz" value="$(arg dz)"/>
+    <param name="dry_run" value="$(arg dry_run)"/>
+    <param name="vel_scale" value="$(arg vel_scale)"/>
+  </node>
+</launch>

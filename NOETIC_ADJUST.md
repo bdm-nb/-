@@ -232,6 +232,6 @@ trajectory_controller: ""
 
 ## 11. 现在立刻做的三件事
 
-1. 在最内层 `robot_gripper` 里按第 5 节拷入并编译 `vs_practice`。
-2. 用实验室脚本启动臂（能在 RViz 里 Execute 一次即可）。
-3. 跑 `rosrun vs_practice print_interface.py`，把完整终端输出发回来（或自行写入 `interface.yaml`）。有了规划组名和图像话题，步骤 B/C 才能对着真名字跑。
+1. 按 [START_ARM.md](START_ARM.md) **模块 S** 启动这套臂，并用 RViz + `send_small_motion.py` 各发一次小运动。
+2. 在最内层 `robot_gripper` 里按第 5 节拷入并编译 `vs_practice`（模块 S 第 6 步需要它）。
+3. 跑 `rosrun vs_practice print_interface.py`，把规划组名写入 `interface.yaml`。清单没填满不要写检测。

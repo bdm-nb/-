@@ -1,9 +1,8 @@
 # 点这个
 
-**先读本机调整（你刚贴的 Noetic listing）：** [NOETIC_ADJUST.md](NOETIC_ADJUST.md)
+1. **先做：启动臂并下发运动** → [START_ARM.md](START_ARM.md)
+2. 本机栈对照 → [NOETIC_ADJUST.md](NOETIC_ADJUST.md)
+3. 完整实施手册（含模块 S + 步骤 A～H）→ [implementation_guide.md](implementation_guide.md)
+4. 旁路包 → [vs_practice/README.md](vs_practice/README.md)
 
-实施手册（已改成 Noetic / 实验室工作空间）：[implementation_guide.md](implementation_guide.md)
-
-旁路包（拷进 `robot_gripper/src/`）：[vs_practice/README.md](vs_practice/README.md)
-
-旧 PDF 仍是 ROS 2 课设口吻，**以这两个 Markdown 为准**。
+旧 PDF 仍是 ROS 2 课设口吻，**以这些 Markdown 为准**。
