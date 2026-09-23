@@ -26,11 +26,11 @@ from reportlab.platypus import (
 )
 
 FONT_PATH = "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc"
-MD_PATH = Path("/workspace/docs/眼在手视觉伺服闭环练习报告.md")
+MD_PATH = Path("/workspace/docs/眼在手视觉伺服闭环实施手册.md")
 OUTPUTS = [
-    Path("/home/ubuntu/Desktop/眼在手视觉伺服闭环练习报告.pdf"),
-    Path("/workspace/docs/眼在手视觉伺服闭环练习报告.pdf"),
-    Path("/opt/cursor/artifacts/眼在手视觉伺服闭环练习报告.pdf"),
+    Path("/home/ubuntu/Desktop/眼在手视觉伺服闭环实施手册.pdf"),
+    Path("/workspace/docs/眼在手视觉伺服闭环实施手册.pdf"),
+    Path("/opt/cursor/artifacts/眼在手视觉伺服闭环实施手册.pdf"),
 ]
 
 
@@ -186,7 +186,7 @@ def add_header_footer(canvas, doc):
     canvas.line(2 * cm, A4[1] - 1.4 * cm, A4[0] - 2 * cm, A4[1] - 1.4 * cm)
     canvas.setFont("WQY", 8)
     canvas.setFillColor(colors.HexColor("#555555"))
-    canvas.drawString(2 * cm, A4[1] - 1.2 * cm, "眼在手上机械臂视觉伺服闭环控制练习报告")
+    canvas.drawString(2 * cm, A4[1] - 1.2 * cm, "眼在手上机械臂视觉伺服闭环控制实施手册")
     canvas.drawRightString(A4[0] - 2 * cm, A4[1] - 1.2 * cm, "科研预备 · 非正式投稿")
     canvas.line(2 * cm, 1.5 * cm, A4[0] - 2 * cm, 1.5 * cm)
     canvas.drawCentredString(A4[0] / 2, 1.1 * cm, f"— {doc.page} —")
@@ -249,7 +249,7 @@ def build_story(md_text: str, s: dict[str, ParagraphStyle], font: str):
                 story.append(Spacer(1, 12))
                 story.append(
                     Paragraph(
-                        "视觉提供误差，控制完成闭环。练习覆盖静态对准、开环对照，以及运动目标与图像延迟下的三种控制律。",
+                        "每一步均给出目的、原理、实现与验收。仿真用课设模型；Commander 只要求会调用。",
                         s["cover_sub"],
                     )
                 )
@@ -313,7 +313,7 @@ def main() -> None:
         rightMargin=2 * cm,
         topMargin=2 * cm,
         bottomMargin=2 * cm,
-        title="眼在手上机械臂视觉伺服闭环控制练习报告",
+        title="眼在手上机械臂视觉伺服闭环控制实施手册",
         author="课题组科研预备练习",
     )
     story = build_story(md, s, font)
