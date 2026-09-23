@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<title>眼在手视觉伺服闭环实施手册（Noetic）</title>
+<style>
+@page { size: A4; margin: 2.0cm 1.8cm 2.1cm 1.8cm;
+  @top-center { content: "眼在手视觉伺服闭环实施手册 · ROS 1 Noetic / 实验室 robot_gripper";
+                font-family: "WenQuanYi Micro Hei"; font-size: 8.5pt; color: #555; }
+  @bottom-center { content: counter(page); font-family: "WenQuanYi Micro Hei"; font-size: 9pt; color: #555; }
+}
+html { font-size: 10.5pt; }
+body {
+  font-family: "WenQuanYi Micro Hei", "Droid Sans Fallback", sans-serif;
+  color: #222; line-height: 1.75; text-align: justify;
+}
+h1 { font-size: 18pt; text-align: center; line-height: 1.45; margin: 0 0 14pt 0; }
+h2 { font-size: 14pt; color: #1b3a4b; page-break-before: always; margin-top: 0;
+     border-bottom: 1.4px solid #1b3a4b; padding-bottom: 5pt; }
+h2.first { page-break-before: avoid; }
+h3 { font-size: 12pt; color: #245071; margin-top: 13pt; }
+h4 { font-size: 11pt; color: #333; margin-top: 10pt; }
+p { margin: 0 0 7pt 0; }
+.cover { text-align: center; margin-top: 2.1cm; }
+.cover p { text-align: center; }
+.meta { margin-top: 22pt; color: #333; }
+.box { background: #f4f7fa; border-left: 4px solid #1b3a4b; padding: 7pt 9pt; margin: 9pt 0; }
+.warn { background: #fff6e8; border-left: 4px solid #c47b12; padding: 7pt 9pt; margin: 9pt 0; }
+.ok { background: #eef7ef; border-left: 4px solid #2e7d32; padding: 7pt 9pt; margin: 9pt 0; }
+table { width: 100%; border-collapse: collapse; margin: 8pt 0 12pt 0; font-size: 9pt; }
+th { background: #1b3a4b; color: #fff; padding: 4pt 5pt; text-align: left; }
+td { border: 0.4pt solid #b0bec5; padding: 4pt 5pt; vertical-align: top; }
+tr:nth-child(even) td { background: #f7f9fb; }
+code, pre { font-family: "WenQuanYi Micro Hei", monospace; }
+pre { background: #f4f6f8; padding: 7pt 9pt; font-size: 8.6pt; line-height: 1.5;
+      white-space: pre-wrap; page-break-inside: avoid; }
+ol, ul { margin: 5pt 0 9pt 0; padding-left: 1.3em; }
+li { margin-bottom: 3pt; }
+.small { font-size: 9pt; color: #555; }
+</style>
+</head>
+<body>
+<div class="cover">
+  <p class="small">本科科研预备 · 实施手册（已按本机更新）</p>
+  <h1>眼在手上机械臂<br/>视觉伺服闭环控制<br/>实施手册</h1>
+  <p>ROS 1 Noetic · 实验室 catkin 工作空间 robot_gripper<br/>含模块 S：启动机械臂并下发运动指令</p>
+  <div class="meta">
+    <p>工作空间：/home/biand/workspace_ws/src/robot_gripper_9_91/robot_gripper_5_29/robot_gripper</p>
+    <p>包：arm_description · arm_moveit_config · abb_driver · control_robot · vi_grab · bio_ik</p>
+    <p>启动脚本：start.sh · start_ui.sh · launch_synarm_ui.sh</p>
+    <p>应用层：Python / moveit_commander · 不改 abb_driver · 不做 ROS 2 课设仿真</p>
+  </div>
+  <div class="ok">顺序：模块 S（启动 + RViz / Python 运动）→ A → B → C → D → E → F → G → H</div>
+</div>
+<p><b>这一模块先于步骤 A～H。</b> 臂还不能按你的指令动，后面的检测和伺服都不要做。</p>
+<p><b>本机版本（已由你贴出的 listing 锁定，不是课设 ROS 2）：</b></p>
+<table><tr><th>项</th><th>值</th></tr><tr><td>系统</td><td>WSL Ubuntu 20.04</td></tr><tr><td>ROS</td><td>1 <b>Noetic</b>（<code>/opt/ros/noetic</code>）</td></tr><tr><td>工作空间根</td><td><code>/home/biand/workspace_ws/src/robot_gripper_9_91/robot_gripper_5_29/robot_gripper</code></td></tr><tr><td>构建</td><td>catkin_tools（<code>devel/</code>，不是 <code>install/</code>）</td></tr><tr><td>臂描述 / 规划</td><td><code>src/arm_description</code> + <code>src/arm_moveit_config</code></td></tr><tr><td>真机驱动</td><td><code>src/abb_driver</code>（不要改）</td></tr><tr><td>组里封装</td><td><code>src/control_robot</code>、<code>src/robot_serial</code></td></tr><tr><td>IK</td><td><code>src/bio_ik</code>（MoveIt 插件，调用即可）</td></tr><tr><td>视觉 / UI</td><td><code>src/vi_grab</code>、<code>src/robot_ui</code>（本模块先不管相机）</td></tr><tr><td>实验室启动脚本</td><td>工作空间根下的 <code>start.sh</code>、<code>start_ui.sh</code>、<code>launch_synarm_ui.sh</code></td></tr></table>
+<p>下文命令里的 <code>$WS</code> 一律等于上面那一行工作空间根。先在每个新开的终端执行一次：</p>
+<pre>export WS=/home/biand/workspace_ws/src/robot_gripper_9_91/robot_gripper_5_29/robot_gripper
+source /opt/ros/noetic/setup.bash
+source &quot;$WS/devel/setup.bash&quot;
+cd &quot;$WS&quot;</pre>
+<p>也可以：<code>source /path/to/本仓库/vs_practice/env.sh</code></p>
+<h2 class="first">S.0 目的、原理、验收</h2>
+<h3>目的</h3>
+<p>学会四件事，并且能口头复述：</p>
+<ol><li>在哪一层目录启动（最内层 <code>robot_gripper</code>，不是 <code>workspace_ws</code>）。</li><li>实验室三条脚本各自开什么，不要同时开两套 bringup。</li><li>用 RViz MotionPlanning <b>Execute</b> 发出第一条轨迹。</li><li>用 <code>moveit_commander</code> 发出第二条小位移（Python，不是改 driver）。</li></ol>
+<h3>原理（本机这条链）</h3>
+<pre>你（RViz 或 Python Commander）
+    → MoveIt 1（arm_moveit_config / move_group，IK 可能走 bio_ik）
+        → FollowJointTrajectory（controllers.yaml 里的名字）
+            → abb_driver / control_robot
+                → 控制器 / 仿真
+                    → /joint_states、/tf 回来</pre>
+<ul><li><code>start.sh</code> 一类脚本负责把 <b>驱动 + MoveIt + 必要节点</b> 拉起来。</li><li>RViz 的 Execute 和 Python 的 <code>arm.go()</code> 是同一层：都是给 MoveIt 下目标，<b>不是</b>直接转电机。</li><li><code>abb_driver</code> 是厂家/工业接口，本练习只调用、不改。</li></ul>
+<h3>验收（本模块完成线）</h3>
+<ul><li><code>/joint_states</code> 有数且在刷新。</li><li>RViz 里规划组能选中，拖一次末端，<b>Plan 成功且 Execute 后关节角变化</b>。</li><li><code>rosrun vs_practice send_small_motion.py</code> 再让末端动约 2 cm（或明确打印 dry-run 目标）。</li><li>你能一句话说明：谁规划、谁跟踪轨迹、谁是 driver。</li></ul>
+<h2>S.1 安全（真机必读，仿真也建议照做）</h2>
+<ol><li>工作空间清空，急停位置你够得到。组里有示教器/急停键，先确认谁按。</li><li>第一条运动只允许 <b>很小</b>：笛卡尔 ≤ 4 cm，速度缩放 0.1。</li><li>终端里随时：</li></ol>
+<pre>rostopic pub /vs/cmd std_msgs/String &quot;data: stop&quot;</pre>
+<p>或在跑 <code>send_small_motion.py</code> 的终端 <code>Ctrl+C</code>。真机以组里急停为准。</p>
+<ol><li>不要两个终端同时 <code>./start.sh</code> 和 <code>./start_ui.sh</code>（会抢 <code>roscore</code> / 驱动）。</li><li>不要对 <code>/home/biand/workspace_ws</code> 跑 <code>catkin build</code> 或 <code>colcon</code>。</li></ol>
+<h2>S.2 先读实验室脚本（30 秒，不要猜）</h2>
+<p>在已 source 的终端：</p>
+<pre>cd &quot;$WS&quot;
+ls -l start.sh start_ui.sh launch_synarm_ui.sh
+echo &quot;===== start.sh =====&quot;
+sed -n &#x27;1,80p&#x27; start.sh
+echo &quot;===== start_ui.sh =====&quot;
+sed -n &#x27;1,80p&#x27; start_ui.sh
+echo &quot;===== launch_synarm_ui.sh =====&quot;
+sed -n &#x27;1,80p&#x27; launch_synarm_ui.sh
+echo &quot;===== MoveIt launch =====&quot;
+ls src/arm_moveit_config/launch</pre>
+<p>对着脚本正文，用下表判断你走哪条路径：</p>
+<table><tr><th>脚本里主要在 launch 什么</th><th>本模块用它来</th></tr><tr><td><code>arm_moveit_config</code> 的 <code>demo.launch</code> / <code>fake</code> / <code>sim:=true</code></td><td><b>路径 1</b>：不上真机，只练 MoveIt + Commander</td></tr><tr><td><code>abb_driver</code> / <code>robot_ip</code> / <code>control_robot</code></td><td><b>路径 2</b>：真机或实验室标准 bringup → 优先 <code>./start.sh</code></td></tr><tr><td><code>robot_ui</code> / <code>launch_synarm_ui</code></td><td><b>路径 3</b>：要实验室 UI 时用；运动仍由 MoveIt 执行</td></tr><tr><td><code>vi_grab</code> / RealSense / JEPA</td><td>本模块先不管；等步骤 C 再开相机</td></tr></table>
+<p>把 <code>ls src/arm_moveit_config/launch</code> 里实际文件名记下来。常见会有 <code>demo.launch</code>、<code>moveit_planning_execution.launch</code>。以你磁盘上的名为准。</p>
+<h2>S.3 启动（三条路径只开一条）</h2>
+<h3>路径 1 — 只核对 MoveIt（不上真机、不抢实验室 UI）</h3>
+<p>适合：第一次练「下发运动」，控制器不在旁边。</p>
+<pre># 终端 1（保持不关）
+export WS=/home/biand/workspace_ws/src/robot_gripper_9_91/robot_gripper_5_29/robot_gripper
+source /opt/ros/noetic/setup.bash
+source &quot;$WS/devel/setup.bash&quot;
+roslaunch arm_moveit_config demo.launch</pre>
+<p>若提示找不到 <code>demo.launch</code>，改成 S.2 里看到的那个带 <code>demo</code> / <code>fake</code> / <code>rviz</code> 的 launch。成功时一般会弹出 RViz，左侧有 <b>MotionPlanning</b>。</p>
+<h3>路径 2 — 实验室日常（优先）</h3>
+<p>适合：组里平时就是这样开臂。</p>
+<pre># 终端 1
+export WS=/home/biand/workspace_ws/src/robot_gripper_9_91/robot_gripper_5_29/robot_gripper
+source /opt/ros/noetic/setup.bash
+source &quot;$WS/devel/setup.bash&quot;
+cd &quot;$WS&quot;
+./start.sh</pre>
+<p>真机时还要满足组里规程（控制器 AUTO、电机使能、RAPID/通信程序在跑、IP 通）。这些写在你们的 <code>ROS_DOCUMENTATION.md</code> 里，本手册不替代。</p>
+<p>若 <code>start.sh</code> 没带 RViz，再开终端 2：</p>
+<pre>export WS=/home/biand/workspace_ws/src/robot_gripper_9_91/robot_gripper_5_29/robot_gripper
+source /opt/ros/noetic/setup.bash
+source &quot;$WS/devel/setup.bash&quot;
+roslaunch arm_moveit_config moveit_rviz.launch</pre>
+<p><code>moveit_rviz.launch</code> 若没有，用 S.2 列出的带 <code>rviz</code> 的文件，或在已有 RViz 里手动加 MotionPlanning 插件。</p>
+<h3>路径 3 — 要实验室 UI（SynArm / robot_ui）</h3>
+<pre>cd &quot;$WS&quot;
+# 二选一，不要和路径 2 同时开
+./start_ui.sh
+# 或
+./launch_synarm_ui.sh</pre>
+<p>UI 可以留着。本模块的运动指令仍然走 RViz / <code>send_small_motion.py</code>，不要在 UI 里乱点和大位移。</p>
+<h2>S.4 确认「臂已经在听」（另开终端 2）</h2>
+<pre>export WS=/home/biand/workspace_ws/src/robot_gripper_9_91/robot_gripper_5_29/robot_gripper
+source /opt/ros/noetic/setup.bash
+source &quot;$WS/devel/setup.bash&quot;
+
+echo &quot;ROS_DISTRO=$ROS_DISTRO&quot;          # 必须是 noetic
+rostopic echo /joint_states -n 1       # 必须有 position 数组
+rostopic hz /joint_states              # Ctrl+C 停；应有稳定 Hz
+rostopic list | grep -E &#x27;joint|move_group|follow|traj|camera&#x27;
+rosservice list | grep -E &#x27;plan|execute|controller|follow&#x27; | head</pre>
+<table><tr><th>现象</th><th>含义</th><th>怎么办</th></tr><tr><td><code>Unable to communicate with master</code></td><td>终端 1 没起来或没 source</td><td>先看终端 1 有没有报错；每个终端都要 source <code>devel</code></td></tr><tr><td>没有 <code>/joint_states</code></td><td>驱动或 fake joint 没起</td><td>回到 S.2 看脚本少 launch 了哪一段</td></tr><tr><td>有 <code>/joint_states</code> 但没有 <code>move_group</code></td><td>只开了驱动，没开 MoveIt</td><td>补 <code>roslaunch arm_moveit_config …</code>（S.2 里的文件）</td></tr><tr><td><code>ROS_DISTRO</code> 不是 noetic</td><td>source 错了发行版</td><td>只 source <code>/opt/ros/noetic</code></td></tr></table>
+<p>可选（若已拷入 <code>vs_practice</code>）：</p>
+<pre>rosrun vs_practice print_interface.py</pre>
+<p>记下打印的 <b>planning groups</b> 和 <b>ee=</b>。后面 <code>--group</code> 必须用这个名字，不要写 <code>panda_arm</code>。</p>
+<h2>S.5 用 RViz 下发第一条运动指令</h2>
+<p>这是本机「运动指令」的第一种发法：人在界面里给目标，MoveIt 规划，轨迹控制器执行。</p>
+<ol><li>RViz 左侧找到 <b>MotionPlanning</b>。没有就：Panels → Add New Panel → MotionPlanning。</li><li>Context / Planning 里 <b>Planning Group</b> 选 <code>print_interface.py</code> 打出来的臂组（常见 <code>manipulator</code>，以打印为准）。</li><li>勾选 <b>Query</b> 的 Start 等于当前状态（或点 <b>Update</b> / <b>Current</b>）。</li><li>用橙色/交互标记把末端平移 <b>很小一截</b>（目测 2～3 cm）。不要转很大关节。</li><li>点 <b>Plan</b>。成功则出现一条轨迹；失败先换近一点的目标，不要改 <code>abb_driver</code>。</li><li>速度缩到很低（若有 Velocity Scaling，先 0.1）。</li><li>点 <b>Execute</b>。看真机或 RViz 里的臂跟着走。</li><li>终端 2：再执行一次 <code>rostopic echo /joint_states -n 1</code>，确认数字相对步骤 S.4 变了。</li></ol>
+<p><b>验收：</b> Execute 成功 + 关节值变化。失败只停在本步。</p>
+<p>把这次成功的末端位姿抄下来，以后写入 <code>vs_practice/config/waypoints.yaml</code>。在终端 2 也可以等 S.6 的脚本帮你打印当前位姿。</p>
+<h2>S.6 用 Python 下发第二条运动指令</h2>
+<p>这是本机「运动指令」的第二种发法：和课程第八章同一层，但是 <b>MoveIt 1 / rospy / <code>moveit_commander</code></b>，不要拷 ROS 2 节点。</p>
+<p>先确认 <code>vs_practice</code> 已在 <code>$WS/src/vs_practice</code> 并 <code>catkin build vs_practice</code>、重新 <code>source devel/setup.bash</code>。</p>
+<p><b>只看当前状态（臂不动）：</b></p>
+<pre>rosrun vs_practice send_small_motion.py _group:=manipulator _dry_run:=true</pre>
+<p>把 <code>_group</code> 换成 S.4 打印的组名。屏幕会打出当前关节、当前末端位姿（可抄进 <code>waypoints.yaml</code>）。</p>
+<p><b>真的动 2 cm（沿当前末端 z，先 dry-run 看目标再执行）：</b></p>
+<pre># 先看目标，不动
+rosrun vs_practice send_small_motion.py _group:=manipulator _dz:=0.02 _dry_run:=true
+# 确认目标合理后再动（≤ 4 cm）
+rosrun vs_practice send_small_motion.py _group:=manipulator _dz:=0.02 _dry_run:=false</pre>
+<p>或：</p>
+<pre>roslaunch vs_practice send_small_motion.launch group:=manipulator dz:=0.02 dry_run:=false</pre>
+<p>脚本内部做的事：</p>
+<ol><li><code>MoveGroupCommander(group)</code> 接到已经在跑的 <code>move_group</code>。</li><li><code>get_current_pose()</code> 取当前末端。</li><li>位置加 <code>dx,dy,dz</code>（默认只加 <code>dz=0.02</code>）。</li><li><code>set_max_velocity_scaling_factor(0.1)</code>。</li><li><code>set_pose_target</code> → <code>go(wait=True)</code> → <code>stop</code> → <code>clear_pose_targets</code>。</li></ol>
+<p>位移绝对值超过 4 cm 会直接拒绝。这就是「调用 Commander」，不是写 driver。</p>
+<p><b>验收：</b> 日志 <code>go ok=True</code>；<code>/joint_states</code> 再变一次；你能指出代码里没有改 <code>abb_driver</code>。</p>
+<h2>S.7 停机</h2>
+<pre># 停练习节点
+pkill -f send_small_motion.py
+# 停实验室 bringup：回到终端 1，Ctrl+C
+# 真机：按组里急停 / 示教器停止，再断电规程</pre>
+<p>不要在臂还在动时关 WSL 窗口。</p>
+<h2>S.8 运动指令失败对照</h2>
+<table><tr><th>现象</th><th>先查</th></tr><tr><td><code>No move_group</code> / Commander 超时</td><td>终端 1 是否 launch 了 <code>arm_moveit_config</code></td></tr><tr><td><code>Invalid group name</code></td><td><code>--group</code> / <code>_group</code> 与 SRDF 不一致，跑 <code>print_interface.py</code></td></tr><tr><td>Plan 失败</td><td>目标太远、碰撞、超限；先减到 2 cm</td></tr><tr><td>Plan 成功但臂不动</td><td>假执行 vs 真机：路径 1 只动 RViz；真机要路径 2 且控制器使能</td></tr><tr><td>一启动就报 robot_ip / socket</td><td><code>abb_driver</code> 连不上控制器；查 <code>ROS_DOCUMENTATION.md</code> 和网线，不改驱动源码</td></tr><tr><td>UI 和 RViz 抢臂</td><td>只留一条 bringup；UI 打开时不要再 <code>./start.sh</code></td></tr></table>
+<h2>S.9 做完之后</h2>
+<p>本模块通过 → 进入 implementation_guide.md <b>步骤 A</b>（填 <code>interface.yaml</code>）。</p>
+<p>步骤 A 的「RViz 拖一次」若在 S.5 已做过，可以只补 <code>print_interface.py</code> 的登记。</p>
+<p>步骤 B 把 S.6 的单次 <code>go()</code> 扩成 APPROACH → DESCEND 流程。</p>
+<p><b>文件性质：</b> 分步实施指导书（目的—原理—实现—验收）</p>
+<p><b>本机栈（已由 listing 锁定）：</b> WSL Ubuntu 20.04 · ROS 1 <b>Noetic</b> · catkin_tools</p>
+<p><b>工作空间根：</b> <code>/home/biand/workspace_ws/src/robot_gripper_9_91/robot_gripper_5_29/robot_gripper</code></p>
+<p><b>仿真/真机模型：</b> 只用该工作空间里的 <code>arm_description</code> + <code>arm_moveit_config</code>，不用课设 URDF，不另起 ROS 2 仿真</p>
+<p><b>语言约定：</b> 应用层 Python；调用 <code>moveit_commander</code>；不写 Commander 库、不改 <code>abb_driver</code></p>
+<p>对照清单见 NOETIC_ADJUST.md。</p>
+<p><b>启动臂、RViz / Python 下发运动（先做这一章）：</b> START_ARM.md</p>
+<p>下文每一步：<b>目的、原理、实现、验收</b>。未通过验收不得进入下一步。顺序：</p>
+<p><b>模块 S（启动 + 运动指令）→ A → B → C → D → E → F → G → H</b></p>
+<h2>0. 项目在做什么（实施视角）</h2>
+<p>做出一条与现有 <code>vi_grab</code>「检测一次再规划」不同的链路：</p>
+<ol><li>用 <b>MoveIt 1 Commander</b> 把末端送到相机能看见 ArUco 的位置（开环、粗、快）。</li><li><b>停止规划长轨迹</b>，每一帧用标签中心相对图像中心的像素误差生成运动量。</li><li>运动量按本机接口写入臂：若有关节速度话题则走速度；ABB/<code>abb_driver</code> 通常只有轨迹接口，则走几毫米笛卡尔增量。臂一动，下一帧误差就变，形成闭环。</li><li>用表格比较开环与闭环；再给图像加延迟、让标签慢速移动，比较三种控制律。</li></ol>
+<p>视觉只提供误差。思考在控制：增益、限幅、延迟、停机。现有 UI / JEPA 采集线不要混进来。</p>
+<p>新建包：<code>src/vs_practice</code>（已在本仓库写好）。规划组名以本机 SRDF / <code>print_interface.py</code> 为准。</p>
+<pre>vi_grab 或 RealSense 已有图像 --&gt; vs_detect --&gt; /vs/error, /vs/tag_ok
+/joint_states, /tf            --&gt; vs_servo  --&gt; 速度或短笛卡尔增量
+vs_fsm --APPROACH--&gt; vs_commander --&gt; 轨迹控制器（abb_driver / MoveIt）
+vs_fsm --SERVO--&gt; vs_servo</pre>
+<h2>步骤 A 环境确认与信息登记</h2>
+<h3>目的</h3>
+<p>避免在规划组、图像话题、控制器接口都未知时写代码。本步只产生 <code>interface.yaml</code>。</p>
+<h3>原理</h3>
+<p>后续节点要写死：规划组、关节顺序、图像话题、<code>servo_mode</code>。这些来自 <code>arm_moveit_config</code>、<code>vi_grab</code>、<code>control_robot</code>，不是课设 panda 名。</p>
+<h3>实现</h3>
+<ol><li>模块 S 已经通过（臂能 Execute，Python 能发 2 cm）。</li><li>把本仓库 <code>vs_practice/</code> 拷进最内层 <code>src/</code>（若 S.6 还没拷），在该层 <code>catkin build vs_practice</code>，<code>source devel/setup.bash</code>。不要对 <code>/home/biand/workspace_ws</code> 做 colcon / catkin。</li><li>臂保持模块 S 的启动方式，不要另开第二套 bringup。另开终端：</li></ol>
+<pre>source /opt/ros/noetic/setup.bash
+source /home/biand/workspace_ws/src/robot_gripper_9_91/robot_gripper_5_29/robot_gripper/devel/setup.bash
+rosrun vs_practice print_interface.py
+rostopic echo /joint_states -n 1</pre>
+<ol><li>打开 <code>src/arm_moveit_config</code> 的 SRDF 与 <code>controllers.yaml</code>，把打印结果写入 <code>vs_practice/config/interface.yaml</code>。</li><li>模块 S 里成功的那次末端位姿写入 <code>waypoints.yaml</code>（不要抄手册示例数字）。</li></ol>
+<h3>验收</h3>
+<p>清单填满。RViz / Python 运动在模块 S 已验收。没有 <code>controller_manager</code> 不算失败——ABB 经常没有，记到 yaml 即可。</p>
+<h2>步骤 B 用 Python 调用 Commander 完成开环流程</h2>
+<h3>目的</h3>
+<p>把「会调用」落成状态机骨架。以后视觉只替换目标从哪来。</p>
+<h3>原理</h3>
+<p><code>moveit_commander.MoveGroupCommander</code> 是 MoveIt 1 客户端。<code>set_pose_target</code> + <code>go()</code> 请规划器出轨迹，由 <code>abb_driver</code> / 轨迹控制器跟踪。调用者不是驱动器。<code>bio_ik</code> 若已写在 kinematics.yaml，会在规划时自动用，不要直接调它的 C++。</p>
+<p>状态：APPROACH → DESCEND → GRASP → LIFT → DONE。无夹爪则省略 GRASP。</p>
+<h3>实现</h3>
+<ol><li>在 RViz 拖出安全位姿，写入 <code>vs_practice/config/waypoints.yaml</code>（禁止沿用手册里的示例数字）。</li><li>确认 <code>arm_group</code> 与 <code>print_interface.py</code> 一致后：</li></ol>
+<pre>roslaunch vs_practice commander_only.launch arm_group:=&lt;你的组名&gt;</pre>
+<ol><li>看 <code>/vs/commander_state</code>。规划失败先改 yaml。</li><li><code>rosbag record /joint_states /tf</code>。连续自动跑两遍。</li></ol>
+<h3>验收</h3>
+<p>不手动拖目标，脚本能走完全流程。不要改 <code>abb_driver</code>。</p>
+<h2>步骤 C 眼在手相机与 ArUco 检测</h2>
+<h3>目的</h3>
+<p>让图像成为系统输入。本步只做测量。</p>
+<h3>原理</h3>
+<p>ArUco 四角点取中心。眼在手相机固连末端。光学系与法兰系不同。</p>
+<h3>实现</h3>
+<ol><li><b>不要</b>再 <code>roslaunch realsense2_camera</code> 第二份。<code>rostopic list | grep -i image</code>，把 <code>vi_grab</code> / RealSense 已有话题写入 <code>interface.yaml</code>。</li><li>打印或放置 ArUco（DICT_4X4_50，边长约 0.05 m）。</li><li><code>roslaunch vs_practice detect_only.launch image_topic:=&lt;实际话题&gt;</code>。</li><li>看 <code>/vs/tag_ok</code>、<code>/vs/error</code>，可用 <code>image_view</code> 看 <code>/vs/debug_image</code>。</li><li><code>rosrun tf tf_echo &lt;ee_link&gt; &lt;camera_optical_frame&gt;</code>。</li></ol>
+<h3>验收</h3>
+<p>看见为真，遮挡为假。禁止把像素送给 MoveIt。</p>
+<h2>步骤 D 开环视觉引导</h2>
+<h3>目的</h3>
+<p>图像只用一次生成位姿，交给 Commander，作为开环基线。</p>
+<h3>原理</h3>
+<p><code>T_base_tag = T_base_ee * T_ee_cam * T_cam_tag</code>，只在 APPROACH 入口算一次。运动中途标签再动，轨迹不变。</p>
+<h3>实现</h3>
+<p><code>roslaunch vs_practice vs_practice.launch mode:=open</code>，然后 <code>rostopic pub /vs/start std_msgs/String &quot;data: go&quot;</code>。到位后再读像素，记开环终值误差。</p>
+<h3>验收</h3>
+<p>能说明图像只用了一次。本关不把误差送进伺服。</p>
+<h2>步骤 E 静态视觉闭环（核心）</h2>
+<h3>目的</h3>
+<p>停止规划长轨迹，误差生成运动。这是与现有抓取流程的分界。</p>
+<h3>原理</h3>
+<p>误差 <code>e = (u - cx, v - cy)</code>。简化律 <code>vx = -λ Z e_u / f_x</code>，<code>vy</code> 同理。看丢则运动清零。伺服段禁止再 <code>plan()</code> 一条自由空间长轨迹。</p>
+<p><b>接口（本机必须先查）：</b></p>
+<ul><li>有关节速度话题 → <code>servo_mode: joint_velocity</code></li><li>只有 ABB 轨迹（常见）→ <code>servo_mode: cartesian_increment</code>（每周期几毫米）。λ 更小。不要用 2 Hz 大位移点冒充闭环。</li></ul>
+<h3>实现</h3>
+<ol><li>填好 <code>interface.yaml</code> 的 <code>servo_mode</code>。</li><li><code>roslaunch vs_practice vs_practice.launch mode:=closed</code></li><li><code>rostopic pub /vs/start std_msgs/String &quot;data: go&quot;</code></li><li>λ 从很小加到刚振荡再回调。</li></ol>
+<h3>验收</h3>
+<p>伺服段无一次长轨迹 <code>plan()</code>；遮挡后运动为 0。本步是进组演示最低完成线。</p>
+<h2>步骤 F 开环 / 闭环对照</h2>
+<p>同一初始条件，开环与闭环各 ≥5 次。<code>rosbag record /joint_states /tf /vs/error /vs/state</code>。计算准（稳态像素误差）、快（调节时间）、稳（振荡/超调）。缺表不算完成。</p>
+<h2>步骤 G 运动目标、延迟与三种律</h2>
+<p>步骤 E 稳定后：标签慢速移动；<code>image_delay_ms</code> 取 50/100/150；<code>law:=p|gain_schedule|predict</code>。只替换 <code>image_law()</code>。</p>
+<h2>步骤 H 真机</h2>
+<p>本机已经在实验室包上。先复现步骤 E。占机短、调参不在臂上盲加 λ。急停按组里规程。不改 <code>abb_driver</code>。</p>
+<h2>进度</h2>
+<p><b>S 启动+运动指令</b> → A 清单 → B Commander 流程 → C 检测 → D 开环视觉 → E 速度/增量闭环 ★最低完成线 → F 对照 → G 延迟三律 → H 真机细则</p>
+<p>当前：栈已锁定为 Noetic 实验室包。下一步做 <b>模块 S</b>（START_ARM.md），不要先写检测。</p>
+</body>
+</html>

@@ -1,8 +1,12 @@
 # 点这个
 
-1. **先做：启动臂并下发运动** → [START_ARM.md](START_ARM.md)
-2. 本机栈对照 → [NOETIC_ADJUST.md](NOETIC_ADJUST.md)
-3. 完整实施手册（含模块 S + 步骤 A～H）→ [implementation_guide.md](implementation_guide.md)
-4. 旁路包 → [vs_practice/README.md](vs_practice/README.md)
+**更新后的 PDF（22 页，Noetic + 模块 S）：** [implementation_guide.pdf](implementation_guide.pdf)
 
-旧 PDF 仍是 ROS 2 课设口吻，**以这些 Markdown 为准**。
+同内容副本：
+- [眼在手视觉伺服实施文档.pdf](眼在手视觉伺服实施文档.pdf)
+- [实施手册.pdf](实施手册.pdf)
+
+Markdown：
+1. [START_ARM.md](START_ARM.md) — 启动臂并下发运动
+2. [implementation_guide.md](implementation_guide.md) — 完整手册
+3. [NOETIC_ADJUST.md](NOETIC_ADJUST.md) — 相对旧 ROS 2 手册的对照
