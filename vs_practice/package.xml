@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>vs_practice</name>
+  <version>0.1.0</version>
+  <description>Eye-in-hand ArUco IBVS practice nodes for ROS 1 Noetic (lab catkin workspace).</description>
+  <maintainer email="student@local">vs_practice</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>trajectory_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>tf</depend>
+  <depend>tf2_ros</depend>
+  <depend>moveit_commander</depend>
+  <depend>moveit_msgs</depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+</package>

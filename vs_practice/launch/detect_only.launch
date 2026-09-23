@@ -1,0 +1,11 @@
+<launch>
+  <arg name="image_topic" default="/camera/color/image_raw"/>
+  <arg name="camera_info_topic" default="/camera/color/camera_info"/>
+
+  <node pkg="vs_practice" type="vs_detect_node.py" name="vs_detect" output="screen">
+    <param name="image_topic" value="$(arg image_topic)"/>
+    <param name="camera_info_topic" value="$(arg camera_info_topic)"/>
+    <param name="aruco_dictionary" value="DICT_4X4_50"/>
+    <param name="aruco_id" value="0"/>
+  </node>
+</launch>

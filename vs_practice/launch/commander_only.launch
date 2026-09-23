@@ -1,0 +1,10 @@
+<launch>
+  <arg name="arm_group" default="manipulator"/>
+  <arg name="run_on_start" default="true"/>
+
+  <node pkg="vs_practice" type="vs_commander_node.py" name="vs_commander" output="screen">
+    <param name="arm_group" value="$(arg arm_group)"/>
+    <param name="run_on_start" value="$(arg run_on_start)"/>
+    <rosparam command="load" file="$(find vs_practice)/config/waypoints.yaml" ns="waypoints"/>
+  </node>
+</launch>

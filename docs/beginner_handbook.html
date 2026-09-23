@@ -48,10 +48,10 @@
   <h1>眼在手上机械臂<br/>视觉伺服闭环控制<br/>实施文档</h1>
   <p>一份给控制专业初学者的长篇操作说明书<br/>每一步都写清：为什么做、在算什么、具体怎么做、怎样才算做完</p>
   <div class="meta">
-    <p>适用：已学 ROS 2 通信、URDF、Gazebo，并看完 MoveIt 课程第八章 Python 调用</p>
-    <p>不要求：精通 C++、自写驱动、实验室内部模型</p>
-    <p>仿真模型：课设工作空间中的机械臂与夹爪</p>
-    <p>真机：组内已有 ROS 接口的 6 轴或 7 轴臂（后半段可选）</p>
+    <p>适用：WSL Ubuntu 20.04 · ROS 1 Noetic · 实验室 catkin 工作空间 robot_gripper</p>
+    <p>不要求：精通 C++、改 abb_driver、另起 ROS 2 课设仿真</p>
+    <p>模型：src/arm_description + arm_moveit_config；视觉复用 vi_grab / RealSense</p>
+    <p>以仓库 NOETIC_ADJUST.md 与 implementation_guide.md 为准；本文旧 ros2 命令作废</p>
   </div>
 </div>
 
@@ -61,7 +61,7 @@
 <div class="box">
 <b>你现在的位置：</b>第一门课已看到第八章（Python 调用 Commander），第二门 ros2_control 课看得很少。因此本文默认：你会在 Python 里调用规划接口，但还没有自己写完整作业节点。第一步不是加相机，而是把调用做成可重复的脚本。
 </div>
-<p>应用层一律用 Python。你不需要编写 Commander 这个库，也不需要用 C++ 重写 MoveIt。你要写的是“调用代码”。实验室臂的 URDF 现在不要拷进仿真。仿真用课设模型即可。</p>
+<p>应用层一律用 Python。调用 <span class="en">moveit_commander</span>，不要写 Commander 库，不要改 <span class="en">abb_driver</span>。仿真和真机都用最内层 <span class="en">robot_gripper</span> 里已有的臂包，不要另起 ROS 2 课设工作空间。</p>
 
 <h2>第一章　这个项目到底在做什么</h2>
 <h3>1.1 用生活例子先建立图像</h3>

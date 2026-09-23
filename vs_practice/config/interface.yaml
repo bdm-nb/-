@@ -1,0 +1,14 @@
+# Fill from: rosrun vs_practice print_interface.py
+# Do not invent panda_arm / camera names.
+
+ros_distro: noetic
+arm_group: manipulator          # overwrite with SRDF / print_interface
+gripper_group: ""               # empty => skip GRASP
+ee_link: ""
+base_frame: base_link
+image_topic: /camera/color/image_raw
+camera_info_topic: /camera/color/camera_info
+camera_optical_frame: camera_color_optical_frame
+servo_mode: cartesian_increment # joint_velocity | cartesian_increment
+velocity_topic: ""              # e.g. /joint_group_velocity_controller/command
+trajectory_controller: ""

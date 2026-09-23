@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="vs_practice" type="print_interface.py" name="vs_print_interface" output="screen"/>
+</launch>

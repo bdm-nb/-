@@ -1,0 +1,33 @@
+<launch>
+  <arg name="mode" default="closed"/>
+  <arg name="run_on_start" default="false"/>
+  <arg name="arm_group" default="manipulator"/>
+  <arg name="image_topic" default="/camera/color/image_raw"/>
+  <arg name="camera_info_topic" default="/camera/color/camera_info"/>
+  <arg name="servo_mode" default="cartesian_increment"/>
+
+  <node pkg="vs_practice" type="vs_detect_node.py" name="vs_detect" output="screen">
+    <param name="image_topic" value="$(arg image_topic)"/>
+    <param name="camera_info_topic" value="$(arg camera_info_topic)"/>
+    <param name="aruco_dictionary" value="DICT_4X4_50"/>
+    <param name="aruco_id" value="0"/>
+    <param name="image_delay_ms" value="0"/>
+  </node>
+
+  <node pkg="vs_practice" type="vs_commander_node.py" name="vs_commander" output="screen">
+    <param name="arm_group" value="$(arg arm_group)"/>
+    <param name="run_on_start" value="$(arg run_on_start)"/>
+    <rosparam command="load" file="$(find vs_practice)/config/waypoints.yaml" ns="waypoints"/>
+  </node>
+
+  <node pkg="vs_practice" type="vs_servo_node.py" name="vs_servo" output="screen">
+    <param name="arm_group" value="$(arg arm_group)"/>
+    <param name="servo_mode" value="$(arg servo_mode)"/>
+    <param name="lambda" value="0.4"/>
+    <param name="law" value="p"/>
+  </node>
+
+  <node pkg="vs_practice" type="vs_fsm_node.py" name="vs_fsm" output="screen">
+    <param name="mode" value="$(arg mode)"/>
+  </node>
+</launch>
