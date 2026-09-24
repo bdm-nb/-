@@ -1,9 +1,8 @@
-# Fill from: rosrun vs_practice print_interface.py
-# Do not invent panda_arm / camera names.
+# 本机已确认：6 轴 + 夹爪 + 相机。组名/话题仍以 print_interface.py 为准。
 
 ros_distro: noetic
 arm_group: manipulator          # overwrite with SRDF / print_interface
-gripper_group: ""               # empty => skip GRASP
+gripper_group: gripper          # 有夹爪：填 SRDF 里的夹爪组；开合走 robot_serial 现有接口
 ee_link: ""
 base_frame: base_link
 image_topic: /camera/color/image_raw

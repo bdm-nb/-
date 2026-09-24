@@ -98,7 +98,7 @@ source devel/setup.bash
 | `bio_ik` | MoveIt IK 插件 | 不调 C++；kinematics.yaml 已配则会自动用 |
 | `abb_driver` | 真机工业机器人客户端 | **不改**；不写第二套 driver |
 | `control_robot` | 组里对臂的控制封装 | 只读；看它发轨迹还是发速度 |
-| `robot_serial` | 串口 / 夹爪一类外设 | 夹爪开合跟它的现有接口；没有夹爪就省略 GRASP |
+| `robot_serial` | 串口 / 夹爪 | 本机有夹爪：开合跟现有接口，不写新 driver |
 | `vi_grab` | 现有视觉 / 抓取 | **复用图像话题**；不要再开第二套 RealSense |
 | `robot_ui` | 现有 UI | 可以继续用实验室启动；`vs_*` 节点旁路运行 |
 
@@ -215,7 +215,7 @@ rosservice list | grep -E 'controller|follow'
 ```yaml
 ros_distro: noetic
 arm_group: ""          # SRDF / print_interface
-gripper_group: ""      # 没有则留空，省略 GRASP
+gripper_group: ""      # 本机有夹爪：填 SRDF 夹爪组名
 ee_link: ""
 base_frame: ""
 image_topic: /camera/color/image_raw

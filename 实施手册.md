@@ -2,6 +2,7 @@
 
 **文件性质：** 分步实施指导书（目的—原理—实现—验收）  
 **本机栈（已由 listing 锁定）：** WSL Ubuntu 20.04 · ROS 1 **Noetic** · catkin_tools  
+**硬件（你已确认）：** **6 轴 + 夹爪 + 相机** —— 够做本练习；步骤 B 保留 GRASP，步骤 C 复用现有相机，不另开一套  
 **工作空间根：** `/home/biand/workspace_ws/src/robot_gripper_9_91/robot_gripper_5_29/robot_gripper`  
 **仿真/真机模型：** 只用该工作空间里的 `arm_description` + `arm_moveit_config`，不用课设 URDF，不另起 ROS 2 仿真  
 **语言约定：** 应用层 Python；调用 `moveit_commander`；不写 Commander 库、不改 `abb_driver`
@@ -121,7 +122,7 @@ rostopic echo /joint_states -n 1
 
 `moveit_commander.MoveGroupCommander` 是 MoveIt 1 客户端。`set_pose_target` + `go()` 请规划器出轨迹，由 `abb_driver` / 轨迹控制器跟踪。调用者不是驱动器。`bio_ik` 若已写在 kinematics.yaml，会在规划时自动用，不要直接调它的 C++。
 
-状态：APPROACH → DESCEND → GRASP → LIFT → DONE。无夹爪则省略 GRASP。
+状态：APPROACH → DESCEND → GRASP → LIFT → DONE。本机有夹爪，GRASP 用 `robot_serial` / 夹爪规划组的现有开合，不写新 driver。
 
 ### 实现
 

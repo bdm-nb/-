@@ -4,6 +4,7 @@
 **读法：** 每一步固定四节——目的、原理、与上一步的衔接、怎么做。做完一节再翻下一节。  
 **本机：** WSL Ubuntu 20.04 · ROS 1 Noetic · 工作空间根  
 `/home/biand/workspace_ws/src/robot_gripper_9_91/robot_gripper_5_29/robot_gripper`  
+**硬件（已确认）：** 6 轴机械臂 + 夹爪 + 相机。6 轴够做像素对中；夹爪走现有开合；相机复用 `vi_grab` / RealSense，不新开驱动。  
 **包：** `arm_description` · `arm_moveit_config` · `abb_driver` · `control_robot` · `robot_serial` · `vi_grab` · `robot_ui` · `bio_ik` · 旁路包 `vs_practice`  
 **启动脚本：** `start.sh` · `start_ui.sh` · `launch_synarm_ui.sh`  
 **不要：** 另起 ROS 2 课设仿真、改 `abb_driver`、把 JEPA / 现有抓取 UI 和本练习混成一套
@@ -160,7 +161,7 @@ roslaunch vs_practice commander_only.launch arm_group:=<你的组名>
 
 3. 看 `/vs/commander_state`。APPROACH / DESCEND / DONE 或 ERROR 必须打出来。
 4. 另开终端：`rosbag record /joint_states /tf`，连续自动跑两遍，中间不拖 RViz。
-5. 无夹爪则省略 GRASP，在笔记写明。规划失败：先把接近点靠近当前位姿；笛卡尔失败：`descend_dz` 减半。
+5. 本机有夹爪：GRASP 调用现有开合（`robot_serial` 或夹爪规划组）。先在模块 S 单独开合一次，再编进流程。规划失败：先把接近点靠近当前位姿；笛卡尔失败：`descend_dz` 减半。
 
 通过标准：不手动点目标，脚本能走完全流程；你能指出代码里没有改 `abb_driver`。
 
