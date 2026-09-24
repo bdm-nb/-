@@ -1,0 +1,13 @@
+# 本机已确认：6 轴 + 夹爪 + 相机。组名/话题仍以 print_interface.py 为准。
+
+ros_distro: noetic
+arm_group: manipulator          # overwrite with SRDF / print_interface
+gripper_group: gripper          # 有夹爪：填 SRDF 里的夹爪组；开合走 robot_serial 现有接口
+ee_link: ""
+base_frame: base_link
+image_topic: /camera/color/image_raw
+camera_info_topic: /camera/color/camera_info
+camera_optical_frame: camera_color_optical_frame
+servo_mode: cartesian_increment # joint_velocity | cartesian_increment
+velocity_topic: ""              # e.g. /joint_group_velocity_controller/command
+trajectory_controller: ""

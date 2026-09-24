@@ -1,0 +1,13 @@
+lambda: 0.4
+z_hat: 0.35
+qdot_max: 0.15
+cart_step_m: 0.004          # cartesian_increment only; keep a few millimetres
+rate_hz: 20.0
+epsilon_px: 8.0
+hold_cycles: 15
+lost_frames_abort: 20
+image_delay_ms: 0
+law: p                      # p | gain_schedule | predict
+tau: 0.10
+aruco_dictionary: DICT_4X4_50
+aruco_id: 0

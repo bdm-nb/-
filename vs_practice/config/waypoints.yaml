@@ -1,0 +1,8 @@
+# Numbers MUST be taken from a successful RViz MotionPlanning execute.
+# These placeholders will fail on a real ABB workspace — replace them.
+
+base_frame: base_link
+approach:
+  position: {x: 0.40, y: 0.00, z: 0.45}
+  orientation: {x: 0.0, y: 1.0, z: 0.0, w: 0.0}
+descend_dz: -0.06
