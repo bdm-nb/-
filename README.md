@@ -9,6 +9,8 @@
 3. [implementation_guide.md](implementation_guide.md) — 步骤 A～H
 4. [vs_practice/](vs_practice/) — 拷进 `…/robot_gripper/src/` 的旁路包
 
-**PDF（已按本机 Noetic 工作空间与模块 S 重出，约 22 页）：** [implementation_guide.pdf](implementation_guide.pdf)
+**专篇 PDF（每一步的目的、原理、衔接、怎么做）：** [step_explain.pdf](step_explain.pdf)
+
+**总手册 PDF（约 22 页）：** [implementation_guide.pdf](implementation_guide.pdf)
 
 练习本身不是投稿题目。大三再在真机环上增加延迟稳定或 6/7 轴对照后考虑会议 / RA-L。

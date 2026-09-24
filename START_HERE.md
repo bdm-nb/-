@@ -1,8 +1,21 @@
 # 点这个
 
-**更新后的 PDF（22 页，Noetic + 模块 S）：** [implementation_guide.pdf](implementation_guide.pdf)
+**专篇（每步目的 / 原理 / 衔接 / 怎么做，约 19 页）：** [step_explain.pdf](step_explain.pdf)  
+同内容中文名：[每步目的原理衔接做法.pdf](每步目的原理衔接做法.pdf)
 
-拷到你自己的 Windows 桌面（在 **WSL 终端**里执行，不要在云端执行）。三份内容相同，只是文件名不同：
+**总手册（22 页，Noetic + 模块 S）：** [implementation_guide.pdf](implementation_guide.pdf)
+
+专篇拷到桌面：
+
+```bash
+D=/mnt/c/Users/biand/Desktop
+B=https://github.com/bdm-nb/-/raw/cursor/visual-servo-practice-report-4530
+curl -fsSL -o "$D/step_explain.pdf" "$B/step_explain.pdf"
+curl -fsSL -o "$D/每步目的原理衔接做法.pdf" \
+  "$B/%E6%AF%8F%E6%AD%A5%E7%9B%AE%E7%9A%84%E5%8E%9F%E7%90%86%E8%A1%94%E6%8E%A5%E5%81%9A%E6%B3%95.pdf"
+```
+
+总手册拷到桌面（三份内容相同，只是文件名不同）：
 
 ```bash
 D=/mnt/c/Users/biand/Desktop

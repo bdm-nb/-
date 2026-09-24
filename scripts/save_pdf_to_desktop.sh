@@ -40,7 +40,10 @@ download() {
   echo "saved $out"
 }
 
+download "step_explain.pdf"
+download "每步目的原理衔接做法.pdf"
 download "implementation_guide.pdf"
 download "实施手册.pdf"
 download "眼在手视觉伺服实施文档.pdf"
-ls -la "$dest/implementation_guide.pdf" "$dest/实施手册.pdf" "$dest/眼在手视觉伺服实施文档.pdf"
+ls -la "$dest/step_explain.pdf" "$dest/每步目的原理衔接做法.pdf" \
+  "$dest/implementation_guide.pdf" "$dest/实施手册.pdf" "$dest/眼在手视觉伺服实施文档.pdf"
