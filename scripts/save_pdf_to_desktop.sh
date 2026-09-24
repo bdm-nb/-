@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run this in YOUR WSL (not the cloud VM). Saves all same-content handbook PDFs to the Windows desktop.
+# Run this in YOUR WSL (not the cloud VM). Saves the step-explain PDF and handbook copies.
 set -euo pipefail
 
 BRANCH="cursor/visual-servo-practice-report-4530"
@@ -20,9 +20,8 @@ done
 
 if [[ -z "$dest" ]]; then
   echo "No Desktop folder found. Open these in the browser:"
+  echo "  $BASE/step_explain.pdf"
   echo "  $BASE/implementation_guide.pdf"
-  echo "  $BASE/实施手册.pdf"
-  echo "  $BASE/眼在手视觉伺服实施文档.pdf"
   exit 1
 fi
 
